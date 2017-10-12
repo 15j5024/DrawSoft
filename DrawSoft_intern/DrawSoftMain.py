@@ -84,6 +84,8 @@ def deleteLine(i):
 
 def MainLoop():
     screen = Screen()
+    screen.cap.set(3, 1920)  # Width
+    screen.cap.set(4, 1080)  # Height
     global circlelist
     circlelist = []
     global state

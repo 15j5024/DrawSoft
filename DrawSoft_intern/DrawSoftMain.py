@@ -3,11 +3,14 @@ import os
 import numpy as np
 import datetime
 from Elements import *
+from StartScreen import *
 import math
 
 class Screen():
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
+        self.cap.set(3, 1920)  # Width
+        self.cap.set(4, 1080)  # Height
     def height(self):
         return int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     def width(self):
@@ -69,8 +72,7 @@ def deleteLine(i, drawImg):
 
 def MainLoop():
     screen = Screen()
-    screen.cap.set(3, 1920)  # Width
-    screen.cap.set(4, 1080)  # Height
+
     drawImg = np.tile(np.uint8([255, 255, 255]), (screen.height(), screen.width(), 1))
     print("draeimg : ",len(drawImg),len(drawImg[0]))
     global circlelist
@@ -134,4 +136,5 @@ def MainLoop():
 
 if __name__ == '__main__':
     make_dir()
+    StartScreen()
     MainLoop()

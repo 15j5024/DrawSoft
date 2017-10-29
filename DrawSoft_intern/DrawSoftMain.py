@@ -75,7 +75,9 @@ def drawLine(i, iCP, color, drawImg):
     #print(drawImg)
     cv2.circle(drawImg,(int(i[0]), int(i[1])),int(i[2]/2), color, -1)
 
-def deleteLine(i):
+def deleteLine(i, drawImg):
+    cv2.circle(drawImg,(int(i[0]), int(i[1])),int(i[2]/2), (255,255,255), -1)
+    """
     j = 0
     while j < len(circlelist):
         xsub = abs(circlelist[j].x - i[0])
@@ -88,6 +90,7 @@ def deleteLine(i):
         if(z < ijz):
             circlelist.remove(circlelist[j])
         j += 1
+    """
 
 def MainLoop():
     screen = Screen()
@@ -114,7 +117,7 @@ def MainLoop():
         circles = cv2.HoughCircles(cimg,cv2.HOUGH_GRADIENT,1,20,
                             param1=50,param2=75,minRadius=15,maxRadius=150)
 
-        if (circles is not None):
+        if circles is not None:
             circles = np.int16(np.around(circles))
             #print(circles)
             for i in circles[0,:]:
@@ -124,12 +127,13 @@ def MainLoop():
                     drawLine(i,iCP,color,drawImg)
                 #消しゴムモード
                 else:
-                    deleteLine(i)
+                    deleteLine(i, drawImg)
                 iCP = i
 
         #print (f'circlelist = {len(circlelist): 4d}', end='\r')
 
         #画面合成(重すぎて動かないのでコメント化)
+
         """
         for y in range(screen.height()):
             for x in range(screen.width()):
@@ -137,6 +141,7 @@ def MainLoop():
                     for k in range(3):
                         img[y][x][k] = drawImg[y][x][k]
         """
+
         img = cv2.bitwise_and(img, drawImg)
         
         #j = 0 
@@ -149,10 +154,10 @@ def MainLoop():
         
         #img = cv2.bitwise_and(img, drawImg)
         cv2.imshow('DrawSoft',img)
-        cv2.imshow('drawImg',drawImg)
+        #cv2.imshow('drawImg',drawImg)
         #cv2.imshow('DrawSoftResult',result)
         key = cv2.waitKey(10)
-        if key is ord('x'): circlelist = []
+        if key is ord('x'): drawImg = np.tile(np.uint8([255, 255, 255]), (screen.height(), screen.width(), 1))
         if key is ord('d'): state = "delete"
         if key is ord('w'): state = "draw"
         if(key is ord('r')

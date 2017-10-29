@@ -22,7 +22,7 @@ def make_dir():
 def picture(img):
       d = datetime.datetime.today()
       faile = ".\\picture\\"
-      name = faile+'%s-%s-%s-%s-%s-%s'%(d.year, d.month, d.day,d.hour,d.minute,d.second)+'.png'  
+      name = faile+'%s-%s-%s-%s-%s-%s'%(d.year, d.month, d.day,d.hour,d.minute,d.second)+'.png'
       cv2.imwrite(name,img)
 
 def change_color(key):
@@ -43,7 +43,7 @@ def keyInput(key):
     if key is ord('x'):
         circlelist = []
 
-def drawLine(i, iCP,color):
+def drawLine(i, iCP, color, drawImg):
     xsub = abs(i[0]-iCP[0])
     ysub = abs(i[1]-iCP[1])
     z = int(math.sqrt(xsub**2 + ysub**2))
@@ -59,14 +59,21 @@ def drawLine(i, iCP,color):
         while j < sub:
             xsumtemp = xsum + (xtemp * j)
             ysumtemp = ysum + (ytemp * j)
-            ele = Elements()
-            ele.setAll(int(xsumtemp), int(ysumtemp), i[2], color)
-            circlelist.append(ele)
+            #ele = Elements()
+            #ele.setAll(int(xsumtemp), int(ysumtemp), i[2], color)
+            #circlelist.append(ele)
+            #追加
+            cv2.circle(drawImg,(int(xsumtemp), int(ysumtemp)),int(i[2]/2), color, -1)
             j += 1
 
-    ele = Elements()
-    ele.setAll(i[0],i[1],i[2],color)
-    circlelist.append(ele)
+    #ele = Elements()
+    #ele.setAll(i[0],i[1],i[2],color)
+    #circlelist.append(ele)
+
+    #追加
+    #print(i[0],i[1],i[2],color)
+    #print(drawImg)
+    cv2.circle(drawImg,(int(i[0]), int(i[1])),int(i[2]/2), color, -1)
 
 def deleteLine(i):
     j = 0
@@ -86,6 +93,11 @@ def MainLoop():
     screen = Screen()
     screen.cap.set(3, 1920)  # Width
     screen.cap.set(4, 1080)  # Height
+
+    drawImg = np.tile(np.uint8([255, 255, 255]), (screen.height(), screen.width(), 1))
+    #img = np.zeros((height, width, 3), np.uint8)
+    print("draeimg : ",len(drawImg),len(drawImg[0]))
+
     global circlelist
     circlelist = []
     global state
@@ -102,14 +114,14 @@ def MainLoop():
         circles = cv2.HoughCircles(cimg,cv2.HOUGH_GRADIENT,1,20,
                             param1=50,param2=75,minRadius=15,maxRadius=150)
 
-        if circles is not None:
+        if (circles is not None):
             circles = np.int16(np.around(circles))
             #print(circles)
             for i in circles[0,:]:
                 #お絵描きモード
                 if state == "draw":
                     if iCP is None: iCP = i
-                    drawLine(i,iCP,color)
+                    drawLine(i,iCP,color,drawImg)
                 #消しゴムモード
                 else:
                     deleteLine(i)
@@ -117,15 +129,28 @@ def MainLoop():
 
         #print (f'circlelist = {len(circlelist): 4d}', end='\r')
 
-        j = 0 
-        while j < len(circlelist):
-            cv2.circle(img,(circlelist[j].x, circlelist[j].y),int(circlelist[j].r/2),circlelist[j].color,-1) 
-            j += 1
+        #画面合成(重すぎて動かないのでコメント化)
+        """
+        for y in range(screen.height()):
+            for x in range(screen.width()):
+                if(drawImg[y][x][0]!=255 or drawImg[y][x][1]!=255 or drawImg[y][x][2]!=255):
+                    for k in range(3):
+                        img[y][x][k] = drawImg[y][x][k]
+        """
+        img = cv2.bitwise_and(img, drawImg)
+        
+        #j = 0 
+        #while j < len(circlelist):
+        #    cv2.circle(img,(circlelist[j].x, circlelist[j].y),int(circlelist[j].r/2),circlelist[j].color,-1) 
+        #    j += 1
 
         mode = "draw mode" if state == "draw" else "delete mode"
         cv2.putText(img, mode,(int(screen.width()-200),int(screen.height()-20)), fontType, 0.7, (0, 0, 0), 2, -1)
+        
+        #img = cv2.bitwise_and(img, drawImg)
         cv2.imshow('DrawSoft',img)
-
+        cv2.imshow('drawImg',drawImg)
+        #cv2.imshow('DrawSoftResult',result)
         key = cv2.waitKey(10)
         if key is ord('x'): circlelist = []
         if key is ord('d'): state = "delete"

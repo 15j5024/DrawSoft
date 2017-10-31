@@ -5,12 +5,14 @@ import datetime
 from Elements import *
 from StartScreen import *
 import math
+import multiprocessing
+import time
 
 class Screen():
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
-        self.cap.set(3, 1920)  # Width
-        self.cap.set(4, 1080)  # Height
+        self.cap.set(3, 1920//2)  # Width
+        self.cap.set(4, 1080//2)  # Height
     def height(self):
         return int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     def width(self):
@@ -27,6 +29,7 @@ def picture(img):
       faile = ".\\picture\\"
       name = faile+'%s-%s-%s-%s-%s-%s'%(d.year, d.month, d.day,d.hour,d.minute,d.second)+'.png'
       cv2.imwrite(name,img)
+
 
 def change_color(key):
     #黒
@@ -70,6 +73,16 @@ def drawLine(i, iCP, color, drawImg):
 def deleteLine(i, drawImg):
     cv2.circle(drawImg,(int(i[0]), int(i[1])),int(i[2]/2), (255,255,255), -1)
 
+def parafunc(param):
+    y = param[0]
+    width = param[1][0]
+    drawImg = param[2]
+    for x in range(width):
+        if(drawImg[y][x][0]!=255 or drawImg[y][x][1]!=255 or drawImg[y][x][2]!=255):
+            for k in range(3):
+                img[y][x][k] = drawImg[y][x][k]
+
+
 def MainLoop():
     screen = Screen()
 
@@ -89,7 +102,7 @@ def MainLoop():
         img = cv2.medianBlur(img,5)
         cimg = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         circles = cv2.HoughCircles(cimg,cv2.HOUGH_GRADIENT,1,20,
-                            param1=50,param2=75,minRadius=15,maxRadius=150)
+                            param1=50,param2=75,minRadius=60,maxRadius=150)
 
         if circles is not None:
             circles = np.int16(np.around(circles))
@@ -105,6 +118,9 @@ def MainLoop():
 
         #画面合成(重すぎて動かないのでコメント化)
 
+        start = time.time()
+        pool = multiprocessing.Pool()
+        pool.map(parafunc, (range(screen.height()),(screen.width(),0),drawImg))
         """
         for y in range(screen.height()):
             for x in range(screen.width()):
@@ -112,8 +128,11 @@ def MainLoop():
                     for k in range(3):
                         img[y][x][k] = drawImg[y][x][k]
         """
+        elapsed_time = time.time() - start
+        print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+        
 
-        img = cv2.bitwise_and(img, drawImg)
+        #img = cv2.bitwise_and(img, drawImg)
 
         mode = "draw mode" if state == "draw" else "delete mode"
         cv2.putText(img, mode,(int(screen.width()-200),int(screen.height()-20)), fontType, 0.7, (0, 0, 0), 2, -1)
@@ -136,5 +155,5 @@ def MainLoop():
 
 if __name__ == '__main__':
     make_dir()
-    StartScreen()
+    #StartScreen()
     MainLoop()

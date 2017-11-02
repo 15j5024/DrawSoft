@@ -74,18 +74,16 @@ def deleteLine(i, drawImg):
     cv2.circle(drawImg,(int(i[0]), int(i[1])),int(i[2]/2), (255,255,255), -1)
 
 def parafunc(param):
-    y = param[0]
-    width = param[1][0]
-    drawImg = param[2]
-    for x in range(width):
-        if(drawImg[y][x][0]!=255 or drawImg[y][x][1]!=255 or drawImg[y][x][2]!=255):
+    for x in range(Screen().width()):
+        if(drawImg[param][x][0]!=255 or drawImg[param][x][1]!=255 or drawImg[param][x][2]!=255):
             for k in range(3):
-                img[y][x][k] = drawImg[y][x][k]
+                img[param][x][k] = drawImg[param][x][k]
 
 
 def MainLoop():
     screen = Screen()
 
+    global drawImg
     drawImg = np.tile(np.uint8([255, 255, 255]), (screen.height(), screen.width(), 1))
     print("draeimg : ",len(drawImg),len(drawImg[0]))
     global circlelist
@@ -120,7 +118,7 @@ def MainLoop():
 
         start = time.time()
         pool = multiprocessing.Pool()
-        pool.map(parafunc, (range(screen.height()),(screen.width(),0),drawImg))
+        pool.map(parafunc, range(screen.height()))
         """
         for y in range(screen.height()):
             for x in range(screen.width()):
